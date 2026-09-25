@@ -10,6 +10,7 @@ def now():
     return datetime.now(timezone.utc)
 
 class Users(db.Model):
+    __tablename__ = 'users'
     id = db.Column(db.String(36) , primary_key = True , default = gen_uuid)
     username = db.Column(db.String(30) , nullable = False,unique = True)
     email = db.Column(db.String(30) , nullable = False , unique = True)

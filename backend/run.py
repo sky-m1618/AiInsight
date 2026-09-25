@@ -1,7 +1,7 @@
 from flask import Flask
 
-app = Flask(__name__)
-# kswisdisdabjsdakjsdaasdnjsd
-#jsdjasjasjdkakjsdkasksdak
+app = "flask_initialisation"
+
 if __name__ == '__main__':
     app.run(debug=True)
+
