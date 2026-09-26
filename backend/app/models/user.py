@@ -16,7 +16,7 @@ class Users(db.Model):
     email = db.Column(db.String(30) , nullable = False , unique = True)
     password_hash = db.Column(db.String(256),nullable = False)
     role = db.Column(db.String(10) , nullable = False , default = 'USER')
-    created_at = db.Column(db.datetime() , default = now)
+    created_at = db.Column(db.DateTime(timezone=True) , default = now)
 
     def set_password(self, raw_password):
         self.password_hash = generate_password_hash(raw_password)
