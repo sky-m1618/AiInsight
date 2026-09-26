@@ -27,7 +27,7 @@ def create_app(config_name = None):
     app.register_blueprint(auth_bp , url_prefix ="/api/auth")
 
     with app.app_context():
-        from app.models import user, database,model_run , prediction , report
+        from app.models import user, database,ai_suggestions , eda_report , report , visualization
         from app.models.user import Users 
         print("Registered Tables:", db.metadata.tables.keys())
 
