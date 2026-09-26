@@ -51,7 +51,7 @@ def register():
     )
     new_user.set_password(password)
 
-    db.session.add()
+    db.session.add(new_user)
     db.session.commit()
     user = Users.query.filter_by(username = username).first()
     token = create_access_token(identity=user.id , additional_claims=({'role':'USER'}))
