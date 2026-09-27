@@ -1,6 +1,9 @@
-from flask import Blueprint , request,jsonify
+from flask import Blueprint , request,jsonify , current_app
 from app.extensions import db
 from app.models import database
+from werkzeug.utils import secure_filename
+import os
+
 import pandas as pd
 
 dataset_bp = Blueprint('dataset',__name__)
@@ -24,33 +27,23 @@ def csv():
     if not allowed_file(file.filename):
         return jsonify({"error": "Invalid file type. Only CSV files are allowed"}), 400
 
-
+    target_col = request.form.get('target_col',None)
     try:
-        df = pd.read_csv(file.stream)
+        safe_name = secure_filename(file.filename)
         
-        numeric_cols = df.select_dtypes(include=['number']).columns.tolist()
-        if not numeric_cols:
-            return jsonify({
-                "message": "CSV processed successfully", 
-                "summary": "No numerical columns found to calculate averages."
-            }), 200
-            
-        averages = df[numeric_cols].mean().to_dict()
-        row_count = len(df)
-        # ----------------------------
+        # current_app dynamically references the configured folder path on local/production
+        save_directory = current_app.config['UPLOAD_FOLDER']
+        full_storage_path = os.path.join(save_directory, safe_name)
+        
+        # Stream the chunks straight to physical disk
+        file.save(full_storage_path)
 
-        return jsonify({
-            "message": "CSV processed successfully",
-            "metadata": {
-                "filename": file.filename,
-                "total_rows": row_count,
-                "columns_found": list(df.columns)
-            },
-            "analysis": {
-                "column_averages": averages
-            }
-        }), 200
+        # 3. Track Physical Disk Footprint 
+        file_size_bytes = os.path.getsize(full_storage_path)
+        file_size_mb = round(file_size_bytes / (1024 * 1024), 2)
+
+        
+        return jsonify({'message':'file saved succefully'})
 
     except Exception as e:
-        return jsonify({"error": f"Failed to process CSV: {str(e)}"}), 500
-
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 500

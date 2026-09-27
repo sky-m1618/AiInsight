@@ -12,7 +12,12 @@ def create_app(config_name = None):
     app.config.from_object(config_by_name[config_name])
 
     os.makedirs(os.path.join(app.root_path,".." , 'instance'),exist_ok = True)
-    os.makedirs(app.config['UPLOAD_FOLDER'] , exist_ok=True)
+    # os.makedirs(app.config['UPLOAD_FOLDER'] , exist_ok=True)
+    UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+    app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+    app.config['MAX_CONTENT_LENGTH'] = 32 * 1024 * 1024  # 32MB limit
 
     db.init_app(app)
     jwt.init_app(app)
@@ -24,9 +29,11 @@ def create_app(config_name = None):
 
     from app.routes.auth_routes import auth_bp
     from app.routes.dataset_routes import dataset_bp
+    from app.routes.ml_routes import ml_bp
 
     app.register_blueprint(auth_bp , url_prefix ="/api/auth")
     app.register_blueprint(dataset_bp , url_prefix = '/api/dataset')
+    app.register_blueprint(ml_bp , url_prefix = '/api/ml')
 
     with app.app_context():
         from app.models import user, database,ai_suggestions , eda_report , report , visualization

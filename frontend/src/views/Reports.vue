@@ -33,7 +33,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref ,onMounted} from 'vue';
 
 const reports = ref([
   { title: 'Sales Analysis Report', dataset: 'sales_data.csv', date: 'May 18, 2024', size: '2.4 MB' },
@@ -43,4 +43,27 @@ const reports = ref([
   { title: 'Anomaly Detection Report', dataset: 'transactions.csv', date: 'May 14, 2024', size: '1.9 MB' },
   { title: 'Inventory Analysis Report', dataset: 'inventory_data.xlsx', date: 'May 12, 2024', size: '2.0 MB' },
 ]);
+
+
+const edaData = ref(null);
+const loading = ref(true);
+
+onMounted(async () => {
+  try {
+    // Fetch the latest generated EDA entry record from your database
+    const response = await fetch('http://127.0.0.1:5000/api/ml/analyze');
+    const data = await response.json();
+    
+    edaData.value = data.eda_summary;
+    const message = data.message;
+    console.log(message)
+    console.log(edaData)
+    // Map edaData.value to your ApexCharts / Chart.js series configurations here!
+  } catch (error) {
+    console.error("Failed loading data metric reports:", error);
+  } finally {
+    loading.value = false;
+  }
+});
 </script>
+
