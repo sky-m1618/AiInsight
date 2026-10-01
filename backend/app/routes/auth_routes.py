@@ -9,7 +9,7 @@ auth_bp = Blueprint('auth',__name__)
 @auth_bp.post('/login')
 def login():
     data = request.get_json()
-    username = data.get('username')
+    username = data.get('identifier')
     password = data.get('password')
 
     user = Users.query.filter_by(username = username).first()

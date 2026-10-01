@@ -1,14 +1,17 @@
 <template>
   <div class="min-h-screen bg-gray-50 flex font-sans">
-    <!-- Sidebar -->
-    <aside class="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col fixed h-full z-10">
+    
+    <!-- AUTHENTICATED SIDEBAR: Shows only if route meta requires auth -->
+    <aside v-if="isDashboardLayout" class="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col fixed h-full z-10">
       <div class="h-16 flex items-center px-6 border-b border-gray-200">
         <h1 class="text-xl font-bold text-gray-800 flex items-center gap-2">
           <span class="w-6 h-6 bg-blue-600 rounded-md flex items-center justify-center text-white text-xs">A</span>
           AutoML
         </h1>
       </div>
+      
       <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+        <!-- Render your navItems here as defined in AppLayout.vue -->
         <router-link v-for="item in navItems" :key="item.name" :to="item.path" 
           class="flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-colors"
           :class="[$route.name === item.name ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50']">
@@ -16,18 +19,21 @@
           {{ item.name }}
         </router-link>
       </nav>
+      
       <div class="p-4 border-t border-gray-200">
-        <button class="flex items-center gap-3 px-3 py-2 w-full text-gray-600 hover:bg-gray-50 rounded-lg font-medium transition-colors">
+        <router-link :to="'/'" class="flex items-center gap-3 px-3 py-2 w-full text-gray-600 hover:bg-gray-50 rounded-lg font-medium transition-colors">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
           Logout
-        </button>
+        </router-link>
       </div>
     </aside>
 
-    <!-- Main Content Area -->
-    <main class="flex-1 flex flex-col ml-0 md:ml-64">
-      <!-- Top Header -->
-      <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 sticky top-0 z-20">
+    <!-- MAIN CONTENT AREA -->
+    <!-- Applies left margin only when the dashboard sidebar is active[cite: 1] -->
+    <main class="flex-1 flex flex-col" :class="isDashboardLayout ? 'ml-0 md:ml-64' : 'w-full'">
+      
+      <!-- AUTHENTICATED TOP HEADER -->
+      <header v-if="isDashboardLayout" class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 sticky top-0 z-20">
         <div class="flex items-center gap-4 w-1/3">
           <div class="relative w-full max-w-md hidden sm:block">
             <svg class="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
@@ -43,13 +49,17 @@
             <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold text-sm">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
             </div>
+            <!-- User Profile Display[cite: 1] -->
             <span class="text-sm font-medium text-gray-700">John Doe</span>
             <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
           </div>
         </div>
       </header>
 
-      <!-- Page Content -->
+      <!-- PUBLIC LANDING NAVBAR: Shows when not on dashboard -->
+      <LandingNavbar v-else />
+
+      <!-- DYNAMIC PAGE CONTENT -->
       <div class="flex-1 p-6 overflow-y-auto">
         <router-view></router-view>
       </div>
@@ -58,9 +68,14 @@
 </template>
 
 <script setup>
-import { h } from 'vue';
+import { computed, h } from 'vue';
+import { useRoute } from 'vue-router';
+import LandingNavbar from '../components/LandingNavBar.vue'; // Import your separate public nav component
 
-// Inline SVG components for the sidebar icons
+const route = useRoute();
+
+const isDashboardLayout = computed(() => route.meta.layout === 'dashboard');
+
 const IconOverview = () => h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' })]);
 const IconDatasets = () => h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4' })]);
 const IconEDA = () => h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z' }), h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z' })]);
@@ -70,8 +85,9 @@ const IconReports = () => h('svg', { fill: 'none', stroke: 'currentColor', viewB
 const IconDeployments = () => h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2' })]);
 const IconSettings = () => h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z' }), h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M15 12a3 3 0 11-6 0 3 3 0 016 0z' })]);
 
+
 const navItems = [
-  { name: 'Overview', path: '/', icon: IconOverview },
+  { name: 'Overview', path: '/overview', icon: IconOverview },
   { name: 'Datasets', path: '/datasets', icon: IconDatasets },
   { name: 'EDA Explorer', path: '/eda', icon: IconEDA },
   { name: 'ML Models', path: '/models', icon: IconModels },

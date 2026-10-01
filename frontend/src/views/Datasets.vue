@@ -51,6 +51,7 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router'; // ◄— Import Vue Router for programmatic navigation
+import { api } from '../api/api.js'
 
 const fileInputRef = ref(null);
 const selectedFile = ref(null);
@@ -74,7 +75,6 @@ const validateAndAssignFile = (file) => {
   selectedFile.value = file;
 };
 
-// Communicate payload over HTTP boundary and redirect upon success
 const uploadToServer = async () => {
   if (!selectedFile.value) return;
   
@@ -84,10 +84,7 @@ const uploadToServer = async () => {
 
   try {
     // Call the Flask endpoint (which handles AutoML EDA calculations and DB ingestion)
-    const response = await fetch('http://127.0.0.1:5000/api/dataset/csv', {
-      method: 'POST',
-      body: formData,
-    });
+    const response = await api.datasets.upload(formData);
 
     if (!response.ok) {
       throw new Error(`Server returned status code: ${response.status}`);
@@ -107,4 +104,37 @@ const uploadToServer = async () => {
     isUploading.value = false;
   }
 };
+
+// const uploadToServer = async () => {
+//   if (!selectedFile.value) return;
+  
+//   isUploading.value = true;
+//   const formData = new FormData();
+//   formData.append('file', selectedFile.value);
+
+//   try {
+//     // Call the Flask endpoint (which handles AutoML EDA calculations and DB ingestion)
+//     const response = await fetch('http://127.0.0.1:5000/api/dataset/csv', {
+//       method: 'POST',
+//       body: formData,
+//     });
+
+//     if (!response.ok) {
+//       throw new Error(`Server returned status code: ${response.status}`);
+//     }
+
+//     const data = await response.json();
+//     console.log('Backend confirmation payload received:', data);
+    
+//     // ◄— SUCCESS: Programmatically route user to the Reports view dashboard
+//     // Replace 'Reports' with the exact 'name' or '/path' defined in your router configuration file
+//     router.push({ name: 'Reports' }); 
+    
+//   } catch (error) {
+//     console.error('Network dispatch failure encountered:', error);
+//     alert('Failed to connect to backend server. Verify your Flask app is actively running.');
+//   } finally {
+//     isUploading.value = false;
+//   }
+// };
 </script>
