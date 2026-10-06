@@ -30,10 +30,12 @@ def create_app(config_name = None):
     from app.routes.auth_routes import auth_bp
     from app.routes.dataset_routes import dataset_bp
     from app.routes.ml_routes import ml_bp
+    from app.routes.user_routes import user_bp
 
     app.register_blueprint(auth_bp , url_prefix ="/api/auth")
     app.register_blueprint(dataset_bp , url_prefix = '/api/dataset')
     app.register_blueprint(ml_bp , url_prefix = '/api/ml')
+    app.register_blueprint(user_bp , url_prefix = '/api/user')
 
     with app.app_context():
         from app.models import user, database,ai_suggestions , eda_report , report , visualization

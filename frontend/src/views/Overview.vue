@@ -130,6 +130,8 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
+import {api} from '../api/api.js';
+
 
 const datasets = ref([]);
 const modelRuns = ref([]);
@@ -156,4 +158,15 @@ onMounted(async () => {
   datasets.value = mockData.datasets;
   modelRuns.value = mockData.modelRuns;
 });
+
+onMounted( async() =>{
+  const response = await api.user.overviewdata('/overview')
+
+  if (response.status == 200){
+    console.log(response.data)
+  }
+  else{
+    console.log(response.data)
+  }
+})
 </script>
