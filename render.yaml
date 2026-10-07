@@ -1,8 +1,8 @@
 services:
-  # Python Backend Web Service
+  # 1. Python Backend Web Service
   - type: web
     name: aiinsight-backend
-    env: python
+    runtime: python       # FIXED: Changed from env: python
     region: ohio
     plan: free
     buildCommand: "cd backend && pip install -r requirements.txt"
@@ -14,24 +14,26 @@ services:
         fromDatabase:
           name: aiinsight-db
           property: connectionString
-      - key: CORS_ORIGINS
-        value: "https://aiinsight-frontend.onrender.com"
       - key: SECRET_KEY
         generateValue: true
       - key: JWT_SECRET_KEY
         generateValue: true
+      # OPTIONAL: Cleaned up hardcoded CORS by referencing the frontend component dynamically
+      - key: CORS_ORIGINS
+        value: ${aiinsight-frontend.url}
 
-  # Vue 3 Frontend Static Site
+  # 2. Vue 3 Frontend Static Site
   - type: web
     name: aiinsight-frontend
-    env: static
+    runtime: static      # FIXED: Changed from env: static
     region: ohio
     plan: free
     buildCommand: "cd frontend && npm install && npm run build"
     staticPublishPath: "./frontend/dist"
     envVars:
+      # FIXED: Uses dynamic blueprint interpolation instead of a hardcoded URL string
       - key: VITE_API_URL
-        value: "https://aiinsight-backend.onrender.com/api"
+        value: ${aiinsight-backend.url}/api
     routes:
       - type: rewrite
         source: /*
