@@ -31,18 +31,34 @@ def create_app(config_name = None):
     from app.routes.dataset_routes import dataset_bp
     from app.routes.ml_routes import ml_bp
     from app.routes.user_routes import user_bp
+    from app.routes.admin_routes import admin_bp
+    from app.routes.report_routes import report_bp
+    from app.routes.prediction_routes import prediction_bp
 
-    app.register_blueprint(auth_bp , url_prefix ="/api/auth")
-    app.register_blueprint(dataset_bp , url_prefix = '/api/dataset')
-    app.register_blueprint(ml_bp , url_prefix = '/api/ml')
-    app.register_blueprint(user_bp , url_prefix = '/api/user')
+    app.register_blueprint(auth_bp, url_prefix="/api/auth")
+    app.register_blueprint(dataset_bp, url_prefix="/api/dataset")
+    app.register_blueprint(ml_bp, url_prefix="/api/ml")
+    app.register_blueprint(user_bp, url_prefix="/api/user")
+    app.register_blueprint(admin_bp, url_prefix="/api/admin")
+    app.register_blueprint(report_bp, url_prefix="/api")
+    app.register_blueprint(prediction_bp, url_prefix="/api")
 
     with app.app_context():
-        from app.models import user, database,ai_suggestions , eda_report , report , visualization
-        from app.models.user import Users 
+        from app.models import (
+            user, database, ai_suggestions, eda_report,
+            report, visualization, settings,
+        )
+        from app.models.user import Users
+        from app.models.settings import SystemSettings
         print("Registered Tables:", db.metadata.tables.keys())
 
         db.create_all()
+
+        # Seed the singleton SystemSettings row (id=1) on first boot.
+        if SystemSettings.query.get(1) is None:
+            db.session.add(SystemSettings(id=1))
+            db.session.commit()
+            print("--- SystemSettings row seeded (auth enabled by default) ---")
 
         
 

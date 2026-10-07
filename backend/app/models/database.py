@@ -11,11 +11,11 @@ def now():
 
 class Dataset(db.Model):
     __tablename__ = 'datasets'
-    id = db.Column(db.String(30) , primary_key = True , default = gen_uuid)
-    user_id = db.Column(db.String(30) , db.ForeignKey("users.id"),nullable =False)
-    name = db.Column(db.String(30) , nullable = False)
-    file_path = db.Column(db.String(80) , nullable = False)
-    target_column = db.Column(db.String(20))
+    id = db.Column(db.String(36) , primary_key = True , default = gen_uuid)
+    user_id = db.Column(db.String(36) , db.ForeignKey("users.id"),nullable =False)
+    name = db.Column(db.String(255) , nullable = False)
+    file_path = db.Column(db.String(255) , nullable = False)
+    target_column = db.Column(db.String(100))
     task_type = db.Column(db.String(20)) # CLASSIFICATION , REGRESSION
     rows = db.Column(db.Integer)
     columns = db.Column(db.Integer)

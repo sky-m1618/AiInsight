@@ -11,8 +11,8 @@ class Config:
     """Base configuration. Values are pulled from environment variables so the
     same codebase can run in dev / staging / prod without code changes."""
 
-    SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-change-me")
-    JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "dev-jwt-secret-change-me")
+    SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-change-me this is not fair")
+    JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "dev-jwt-secret-change-me why i need to set the secret key")
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(days=7)
     JWT_TOKEN_LOCATION = ["headers"]
     JWT_HEADER_NAME = "Authorization"
