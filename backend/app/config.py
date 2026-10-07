@@ -18,12 +18,16 @@ class Config:
     JWT_HEADER_NAME = "Authorization"
     JWT_HEADER_TYPE = "Bearer"
 
-    # Default to SQLite for zero-config local dev; point DATABASE_URL at
-    # Postgres in production, e.g.
-    # postgresql://user:password@localhost:5432/pubg_tournaments
-    SQLALCHEMY_DATABASE_URI = os.environ.get(
-        "DATABASE_URL"
-    )
+    # Render databases provide 'postgres://' but SQLAlchemy requires 'postgresql://'
+    db_url = os.environ.get("DATABASE_URL")
+    if db_url and db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
+
+    # Default to SQLite for zero-config local dev
+    if not db_url:
+        db_url = "sqlite:///" + os.path.join(basedir, "..", "instance", "ai.db")
+
+    SQLALCHEMY_DATABASE_URI = db_url
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     UPLOAD_FOLDER = os.path.join(basedir, "uploads")
