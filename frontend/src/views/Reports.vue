@@ -1,69 +1,159 @@
-<!-- src/views/Reports.vue -->
 <template>
   <div class="space-y-6">
     <div class="flex justify-between items-center">
       <div>
         <h2 class="text-xl font-bold text-gray-800">Reports</h2>
-        <p class="text-sm text-gray-500">View and download your generated reports</p>
+        <p class="text-sm text-gray-500">View your EDA reports and AI suggestions</p>
       </div>
-      <button class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2">
+      <router-link to="/datasets"
+        class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-        Generate Report
-      </button>
+        Upload Dataset
+      </router-link>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div v-for="report in reports" :key="report.title" class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
-        <div>
-          <div class="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600 mb-4">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+    <!-- Loading -->
+    <div v-if="loading" class="flex justify-center items-center h-32">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    </div>
+
+    <template v-else-if="edaData">
+      <!-- Dataset Info -->
+      <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+        <h3 class="font-semibold text-gray-800 mb-3">Dataset: {{ edaData.dataset?.name }}</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div><span class="text-gray-500">Rows:</span> <span class="font-medium">{{ edaData.dataset?.rows?.toLocaleString() ?? '—' }}</span></div>
+          <div><span class="text-gray-500">Columns:</span> <span class="font-medium">{{ edaData.dataset?.columns ?? '—' }}</span></div>
+          <div><span class="text-gray-500">Target:</span> <span class="font-medium">{{ edaData.dataset?.target_column || 'None' }}</span></div>
+          <div><span class="text-gray-500">Status:</span>
+            <span class="font-medium" :class="edaData.dataset?.status === 'processed' ? 'text-green-600' : 'text-yellow-600'">{{ edaData.dataset?.status }}</span>
           </div>
-          <h3 class="font-semibold text-gray-800">{{ report.title }}</h3>
-          <p class="text-xs text-gray-500 mt-1">{{ report.dataset }}</p>
-        </div>
-        <div class="flex justify-between items-center mt-6 pt-4 border-t border-gray-100">
-          <p class="text-xs text-gray-400">{{ report.date }} · {{ report.size }}</p>
-          <button class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-          </button>
         </div>
       </div>
+
+      <!-- AI Suggestion -->
+      <div v-if="edaData.suggestion" class="bg-blue-50 border border-blue-200 p-5 rounded-xl">
+        <h3 class="font-semibold text-blue-800 mb-2 flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+          AI Model Suggestion
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-blue-900">
+          <div><span class="text-blue-600">Task:</span> {{ edaData.suggestion.task_type }}</div>
+          <div><span class="text-blue-600">Model:</span> {{ edaData.suggestion.suggested_model }}</div>
+          <div><span class="text-blue-600">Target:</span> {{ edaData.suggestion.target_variable }}</div>
+        </div>
+        <p class="text-sm text-blue-800 mt-3">{{ edaData.suggestion.ai_reasoning }}</p>
+      </div>
+
+      <!-- EDA Overview -->
+      <div v-if="edaData.message" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Numerical Features -->
+        <div v-if="numericalCols.length" class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+          <h3 class="font-semibold text-gray-800 mb-3">Numerical Features ({{ numericalCols.length }})</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs text-gray-600">
+              <thead class="bg-gray-50 text-gray-500 uppercase">
+                <tr>
+                  <th class="px-3 py-2 text-left">Column</th>
+                  <th class="px-3 py-2">Mean</th>
+                  <th class="px-3 py-2">Min</th>
+                  <th class="px-3 py-2">Max</th>
+                  <th class="px-3 py-2">Std</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                <tr v-for="col in numericalCols" :key="col">
+                  <td class="px-3 py-2 font-medium text-gray-800">{{ col }}</td>
+                  <td class="px-3 py-2 text-center">{{ fmt(edaData.message.numerical_features[col]?.mean) }}</td>
+                  <td class="px-3 py-2 text-center">{{ fmt(edaData.message.numerical_features[col]?.min) }}</td>
+                  <td class="px-3 py-2 text-center">{{ fmt(edaData.message.numerical_features[col]?.max) }}</td>
+                  <td class="px-3 py-2 text-center">{{ fmt(edaData.message.numerical_features[col]?.std) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Categorical Features -->
+        <div v-if="categoricalCols.length" class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+          <h3 class="font-semibold text-gray-800 mb-3">Categorical Features ({{ categoricalCols.length }})</h3>
+          <div class="space-y-3">
+            <div v-for="col in categoricalCols.slice(0, 6)" :key="col" class="text-sm">
+              <p class="font-medium text-gray-800 mb-1">{{ col }} <span class="text-gray-400 text-xs">({{ edaData.message.categorical_features[col]?.unique_values_count }} unique)</span></p>
+              <div class="flex flex-wrap gap-1">
+                <span v-for="(count, val) in topCategories(col)" :key="val"
+                  class="px-2 py-0.5 bg-gray-100 text-gray-700 rounded text-xs">
+                  {{ val }}: {{ count }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div v-if="edaData.charts?.length" class="space-y-4">
+        <h3 class="font-semibold text-gray-800">Generated Charts</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div v-for="(chart, i) in edaData.charts" :key="i" class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+            <p class="text-sm font-medium text-gray-600 mb-2">
+              {{ chart.chart_type.replace(/_/g, ' ') }}
+              <span v-if="chart.target_column" class="text-gray-400"> — {{ chart.target_column }}</span>
+            </p>
+            <img :src="chart.base64_data" :alt="chart.chart_type" class="w-full rounded" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Missing Values -->
+      <div v-if="missingValues && Object.keys(missingValues).length" class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+        <h3 class="font-semibold text-gray-800 mb-3">Missing Values</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div v-for="(count, col) in missingValues" :key="col" class="text-sm">
+            <span class="font-medium text-gray-800">{{ col }}:</span>
+            <span class="text-red-600 ml-1">{{ count.toLocaleString() }}</span>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <!-- Empty state -->
+    <div v-else class="bg-white p-12 rounded-xl border border-gray-200 text-center">
+      <p class="text-gray-400 mb-2">No reports available yet</p>
+      <router-link to="/datasets" class="text-blue-600 text-sm font-medium hover:text-blue-700">Upload a dataset to get started →</router-link>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref ,onMounted} from 'vue';
+import { ref, computed, onMounted } from 'vue'
+import { api } from '../api/api.js'
 
-const reports = ref([
-  { title: 'Sales Analysis Report', dataset: 'sales_data.csv', date: 'May 18, 2024', size: '2.4 MB' },
-  { title: 'Churn Prediction Report', dataset: 'customer_churn.xlsx', date: 'May 18, 2024', size: '1.8 MB' },
-  { title: 'Marketing Insights Report', dataset: 'marketing_data.csv', date: 'May 16, 2024', size: '2.1 MB' },
-  { title: 'Forecast Report', dataset: 'sales_data.csv', date: 'May 15, 2024', size: '1.7 MB' },
-  { title: 'Anomaly Detection Report', dataset: 'transactions.csv', date: 'May 14, 2024', size: '1.9 MB' },
-  { title: 'Inventory Analysis Report', dataset: 'inventory_data.xlsx', date: 'May 12, 2024', size: '2.0 MB' },
-]);
+const edaData = ref(null)
+const loading = ref(true)
 
+const numericalCols = computed(() => Object.keys(edaData.value?.message?.numerical_features || {}))
+const categoricalCols = computed(() => Object.keys(edaData.value?.message?.categorical_features || {}))
+const missingValues = computed(() => edaData.value?.message?.overview?.missing_values_summary || {})
 
-const edaData = ref(null);
-const loading = ref(true);
+const fmt = (val) => {
+  if (val === null || val === undefined) return '—'
+  return typeof val === 'number' ? val.toFixed(2) : val
+}
+
+const topCategories = (col) => {
+  const dist = edaData.value?.message?.categorical_features?.[col]?.top_categories_distribution || {}
+  return Object.fromEntries(Object.entries(dist).slice(0, 5))
+}
 
 onMounted(async () => {
   try {
-    // Fetch the latest generated EDA entry record from your database
-    const response = await fetch('http://127.0.0.1:5000/api/ml/analyze');
-    const data = await response.json();
-    
-    edaData.value = data.eda_summary;
-    const message = data.message;
-    console.log(message)
-    console.log(edaData)
-    // Map edaData.value to your ApexCharts / Chart.js series configurations here!
+    const response = await api.user.edadata()
+    edaData.value = response.data
   } catch (error) {
-    console.error("Failed loading data metric reports:", error);
+    console.error('Failed loading reports:', error)
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-});
+})
 </script>
-

@@ -1,0 +1,11 @@
+Flask
+Flask-SQLAlchemy
+Flask-Migrate
+Flask-JWT-Extended
+Flask-Cors
+python-dotenv
+pandas
+numpy
+matplotlib
+gunicorn==21.2.0
+psycopg2-binary==2.9.9

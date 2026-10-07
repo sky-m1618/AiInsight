@@ -10,8 +10,12 @@
 
     <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
       <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-gray-200">
+        <!-- Error Message -->
+        <div v-if="errorMsg" class="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm">
+          {{ errorMsg }}
+        </div>
+
         <form class="space-y-6" @submit.prevent="handleLogin">
-          <!-- Email / Username Field -->
           <div>
             <label for="identifier" class="block text-sm font-medium text-gray-700">
               Email or Username
@@ -23,7 +27,6 @@
             </div>
           </div>
 
-          <!-- Password Field -->
           <div>
             <label for="password" class="block text-sm font-medium text-gray-700">
               Password
@@ -36,9 +39,9 @@
           </div>
 
           <div>
-            <button type="submit"
-              class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
-              Sign in
+            <button type="submit" :disabled="isLoading"
+              class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:bg-gray-400">
+              {{ isLoading ? 'Signing in...' : 'Sign in' }}
             </button>
           </div>
         </form>
@@ -57,36 +60,47 @@
 </template>
 
 <script setup>
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '../api/api.js'
 
 const router = useRouter()
+const errorMsg = ref('')
+const isLoading = ref(false)
 
 const form = reactive({
-  identifier: '', // Can be email or username
+  identifier: '',
   password: ''
 })
 
 const handleLogin = async () => {
-  // Add your Flask API login logic here
-  console.log('Logging in with:', form.identifier)
-  try{
+  errorMsg.value = ''
+  isLoading.value = true
+  try {
     const response = await api.auth.login(form)
+    const data = response.data
 
-    if (response.status == 200){
-      console.log(response.data)
-    }
-    localStorage.setItem('auth_token' , response.data.token)
+    // Store token and role
+    localStorage.setItem('auth_token', data.token)
+    localStorage.setItem('user_role', data.role)
 
-    if (response.data.user.role == "USER"){
-    router.push('/overview')
+    // Store user profile
+    const profile = data.user || data.admin
+    if (profile) {
+      localStorage.setItem('user', JSON.stringify(profile))
     }
-  }catch(error){
-    console.log(error)
+
+    // Route based on role
+    if (data.role === 'ADMIN') {
+      router.push('/admin')
+    } else {
+      router.push('/overview')
+    }
+  } catch (error) {
+    const msg = error.response?.data?.message || 'Login failed. Please try again.'
+    errorMsg.value = msg
+  } finally {
+    isLoading.value = false
   }
-  
-  // Example redirect on success
-  // router.push('/dashboard')
 }
 </script>

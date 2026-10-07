@@ -5,7 +5,7 @@ class Visualization(db.Model):
     __tablename__ = "visualizations"
     
     id = db.Column(db.Integer, primary_key=True)
-    dataset_id = db.Column(db.Integer, db.ForeignKey("datasets.id"), nullable=False)
+    dataset_id = db.Column(db.String(36), db.ForeignKey("datasets.id"), nullable=False)
     
     chart_type = db.Column(db.String(50)) # e.g., 'correlation_heatmap', 'target_distribution'
     target_column = db.Column(db.String(100), nullable=True) # What column this graph represents

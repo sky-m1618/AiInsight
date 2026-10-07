@@ -1,221 +1,47 @@
 <template>
+  <nav class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 transition-all duration-300">
+    <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+      <div
+        @click="router.push('/')"
+        class="flex items-center gap-2 cursor-pointer group"
+      >
+        <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-blue-500/30 group-hover:scale-105 transition-transform">
+          A
+        </div>
+        <span class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600">
+          AutoML
+        </span>
+      </div>
 
-        <nav class="navbar">
-      <div @click="router.push('/')" class="logo" style="cursor: default;">
-        <span class="logo-text"> AutoML</span>
+      <div class="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
+        <a href="#features" class="hover:text-blue-600 transition-colors">Features</a>
+        <a href="#how-it-works" class="hover:text-blue-600 transition-colors">How it Works</a>
+        <a href="#technology" class="hover:text-blue-600 transition-colors">Technology</a>
       </div>
-      <div class="nav-actions">
-        <button @click="goToLogin" class="btn-outline">Log In</button>
-        <button @click="goToRegister" class="btn-primary">Register</button>
+
+      <div class="flex items-center gap-3">
+        <button
+          @click="goToLogin"
+          class="hidden sm:block px-5 py-2.5 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all"
+        >
+          Sign In
+        </button>
+        <button
+          @click="goToRegister"
+          class="px-6 py-2.5 text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-all"
+        >
+          Get Started
+        </button>
       </div>
-    </nav>
+    </div>
+  </nav>
 </template>
 
-
-<style scoped>
-/* Base Variables & Resets */
-.landing-container {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  color: #333;
-  line-height: 1.6;
-  background-color: #f9fafb;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Navbar */
-.navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.5rem 5%;
-  background-color: #ffffff;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-
-.logo-text {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #111827;
-}
-
-.nav-actions {
-  display: flex;
-  gap: 1rem;
-}
-
-/* Buttons */
-button, .btn-contact {
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: 500;
-  border-radius: 6px;
-  transition: all 0.2s ease;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.btn-outline {
-  padding: 0.5rem 1.25rem;
-  background-color: transparent;
-  color: #3b82f6;
-  border: 1px solid #3b82f6;
-}
-
-.btn-outline:hover {
-  background-color: #eff6ff;
-}
-
-.btn-primary {
-  padding: 0.5rem 1.25rem;
-  background-color: #3b82f6;
-  color: #ffffff;
-  border: 1px solid transparent;
-}
-
-.btn-primary:hover {
-  background-color: #2563eb;
-}
-
-.btn-primary.large {
-  padding: 0.75rem 2rem;
-  font-size: 1.125rem;
-}
-
-/* Hero Section */
-.hero {
-  text-align: center;
-  padding: 6rem 5%;
-  background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
-  flex-grow: 1;
-}
-
-.hero-content h1 {
-  font-size: 3rem;
-  font-weight: 800;
-  color: #111827;
-  margin-bottom: 1rem;
-  line-height: 1.2;
-}
-
-.hero-content p {
-  font-size: 1.25rem;
-  color: #4b5563;
-  max-width: 600px;
-  margin: 0 auto 2rem auto;
-}
-
-/* Features Section */
-.features {
-  padding: 4rem 5%;
-  background-color: #ffffff;
-  text-align: center;
-}
-
-.features h2 {
-  font-size: 2rem;
-  margin-bottom: 3rem;
-  color: #111827;
-}
-
-.feature-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.feature-card {
-  padding: 2rem;
-  border-radius: 8px;
-  background-color: #f9fafb;
-  border: 1px solid #e5e7eb;
-}
-
-.feature-card .icon {
-  font-size: 2.5rem;
-  margin-bottom: 1rem;
-}
-
-.feature-card h3 {
-  font-size: 1.25rem;
-  margin-bottom: 0.5rem;
-  color: #111827;
-}
-
-.feature-card p {
-  color: #6b7280;
-}
-
-/* Footer / Contact */
-.contact-section {
-  padding: 4rem 5%;
-  text-align: center;
-  background-color: #111827;
-  color: #ffffff;
-}
-
-.contact-section h2 {
-  font-size: 2rem;
-  margin-bottom: 1rem;
-}
-
-.contact-section p {
-  color: #9ca3af;
-  margin-bottom: 2rem;
-}
-
-.contact-buttons {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
-
-.btn-contact {
-  padding: 0.75rem 1.5rem;
-  border-radius: 6px;
-  background-color: #374151;
-  color: #ffffff;
-  border: 1px solid #4b5563;
-}
-
-.btn-contact:hover {
-  background-color: #4b5563;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .hero-content h1 {
-    font-size: 2.5rem;
-  }
-  .navbar {
-    flex-direction: column;
-    gap: 1rem;
-  }
-}
-</style>
-
-
 <script setup>
-
 import { useRouter } from 'vue-router';
 
-const router = useRouter()
+const router = useRouter();
 
-const goToLogin = () => {
-  // Assumes you have a '/login' route set up in your Vue Router
-  router.push('/login')
-}
-
-const goToRegister = () => {
-  // Assumes you have a '/register' route set up in your Vue Router
-  router.push('/register')
-}
-
+const goToLogin = () => router.push('/login');
+const goToRegister = () => router.push('/register');
 </script>

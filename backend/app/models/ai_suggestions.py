@@ -5,7 +5,7 @@ class AISuggestion(db.Model):
     __tablename__ = "ai_suggestions"
     
     id = db.Column(db.Integer, primary_key=True)
-    dataset_id = db.Column(db.Integer, db.ForeignKey("datasets.id"), nullable=False)
+    dataset_id = db.Column(db.String(36), db.ForeignKey("datasets.id"), nullable=False)
     
     # The target variable the user wants to predict
     target_variable = db.Column(db.String(100), nullable=False)

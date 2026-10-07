@@ -5,7 +5,7 @@ class EDAReport(db.Model):
     __tablename__ = "eda_reports"
     
     id = db.Column(db.Integer, primary_key=True)
-    dataset_id = db.Column(db.Integer, db.ForeignKey("datasets.id"), nullable=False)
+    dataset_id = db.Column(db.String(36), db.ForeignKey("datasets.id"), nullable=False, unique=True)
     
     # Store aggregate stats like row count, missing values, etc.
     # total_rows = db.Column(db.Integer)

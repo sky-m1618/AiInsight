@@ -1,19 +1,16 @@
 import axios from 'axios'
 
-
 const apiClient = axios.create({
-  // Fallback to '/api' if env variable is missing
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
-  // 15-second timeout to prevent hung requests in production, 
-  // especially important for ML tasks that might take a moment
-  timeout: 15000, 
+  // Use Vite environment variable, fallback to local backend for dev
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
   }
 })
 
-
+// Request interceptor — attach JWT token
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('auth_token')
@@ -22,82 +19,82 @@ apiClient.interceptors.request.use(
     }
     return config
   },
-  (error) => {
-    return Promise.reject(error)
-  }
+  (error) => Promise.reject(error)
 )
 
-/**
- * 3. Response Interceptor (Global Error Handling)
- * Catches 401 Unauthorized errors globally and redirects to login,
- * ensuring production users don't get stuck on broken screens if a token expires.
- */
+// Response interceptor — handle 401 globally
 apiClient.interceptors.response.use(
-  (response) => {
-    return response
-  },
+  (response) => response,
   (error) => {
-    // If the server responds with 401 Unauthorized, clear token and redirect
     if (error.response && error.response.status === 401) {
       localStorage.removeItem('auth_token')
-      // Note: If using Vue Router, you might want to import router and router.push('/login')
-      window.location.href = '/login' 
+      localStorage.removeItem('user')
+      window.location.href = '/login'
     }
-    
-    // Log server errors in development, but keep it clean in production
     if (import.meta.env.MODE === 'development') {
       console.error('API Error:', error.response?.data || error.message)
     }
-    
     return Promise.reject(error)
   }
 )
 
-/**
- * 4. Centralized API Service Object
- * Group your endpoints logically so you can call them like: api.auth.login(data)
- */
 export const api = {
   // --- AUTHENTICATION ---
   auth: {
     login: (credentials) => apiClient.post('/auth/login', credentials),
     register: (userData) => apiClient.post('/auth/user/register', userData),
+    me: () => apiClient.get('/auth/me'),
+    publicSettings: () => apiClient.get('/auth/settings'),
   },
 
   // --- ADMIN CONTROLS ---
   admin: {
-    /**
-     * Toggles global authentication on the Flask backend.
-     * @param {boolean} requireAuth - true to enforce auth, false to disable it
-     */
-    toggleGlobalAuth: (requireAuth) => {
-      return apiClient.post('/admin/settings/auth-toggle', { 
-        require_auth: requireAuth 
-      })
-    }
+    overview: () => apiClient.get('/admin/overview'),
+    getSettings: () => apiClient.get('/admin/settings'),
+    toggleGlobalAuth: (requireAuth) =>
+      apiClient.post('/admin/settings/auth-toggle', { require_auth: requireAuth }),
+    updateSettings: (data) => apiClient.post('/admin/settings/update', data),
+    listUsers: () => apiClient.get('/admin/users'),
+    deleteUser: (userId) => apiClient.delete(`/admin/users/${userId}`),
+    listDatasets: () => apiClient.get('/admin/datasets'),
   },
 
-  // --- USER CONTROLS --- 
-
-  user :{
-    overviewdata:() => apiClient.get('/user/overview'),
-    edadata :() => apiClient.get('/user/eda')
+  // --- USER ---
+  user: {
+    overviewdata: () => apiClient.get('/user/overview'),
+    edadata: (datasetId) => {
+      const params = datasetId ? { dataset_id: datasetId } : {}
+      return apiClient.get('/user/eda', { params })
+    },
+    deleteDataset: (datasetId) => apiClient.delete(`/user/dataset/${datasetId}`),
   },
-  
-  // --- ML PIPELINE FEATURES ---
+
+  // --- DATASETS ---
   datasets: {
-    // Override headers for file uploads
     upload: (formData) => apiClient.post('/dataset/csv', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
-      timeout: 60000 // ML file uploads need a longer timeout (60s)
+      timeout: 120000
     }),
-    getAll: () => apiClient.get('/datasets')
+    list: () => apiClient.get('/dataset/list'),
   },
-  
-  models: {
-    getSuggestions: (datasetId) => apiClient.get(`/models/suggestions/${datasetId}`),
-    train: (config) => apiClient.post('/models/train', config)
-  }
+
+  // --- ML ---
+  ml: {
+    analyze: (datasetId) => apiClient.post('/ml/analyze', { dataset_id: datasetId }, {
+      timeout: 120000
+    }),
+  },
+
+  // --- REPORTS ---
+  reports: {
+    list: () => apiClient.get('/reports'),
+    get: (reportId) => apiClient.get(`/reports/${reportId}`),
+  },
+
+  // --- PREDICTIONS ---
+  predictions: {
+    list: () => apiClient.get('/predictions'),
+  },
 }
 
 export default apiClient
